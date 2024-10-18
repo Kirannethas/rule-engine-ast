@@ -1,0 +1,44 @@
+# Define the Node class for the AST
+class Node:
+    def __init__(self, type, left=None, right=None, value=None):
+        self.type = type  # 'operand' for condition, 'operator' for AND/OR
+        self.left = left  # Left child (for operators)
+        self.right = right  # Right child (for operators)
+        self.value = value  # The actual condition (e.g., age > 30 for operands)
+
+# Example: Create a rule AST manually
+def create_sample_rule():
+    # Create operand nodes (conditions)
+    node1 = Node("operand", value="age > 30")
+    node2 = Node("operand", value="department == 'Sales'")
+    
+    # Create operator node (AND)
+    root = Node("operator", left=node1, right=node2, value="AND")
+    
+    return root
+
+# Function to evaluate the AST
+def evaluate_rule(ast, user_data):
+    if ast.type == "operand":
+        # Replace variable names with user data values and evaluate both age and department conditions
+        condition = ast.value
+        if "age" in condition:
+            return eval(condition.replace("age", str(user_data["age"])))
+        elif "department" in condition:
+            return condition.replace("department == ", "") == f"'{user_data['department']}'"
+    elif ast.type == "operator":
+        # Recursively evaluate left and right nodes
+        left_result = evaluate_rule(ast.left, user_data)
+        right_result = evaluate_rule(ast.right, user_data)
+        if ast.value == "AND":
+            return left_result and right_result
+        elif ast.value == "OR":
+            return left_result or right_result
+
+# Create the AST and test the evaluation
+rule_ast = create_sample_rule()
+
+# Test evaluation with user data
+user_data = {"age": 35, "department": "Sales"}
+result = evaluate_rule(rule_ast, user_data)
+print(result)  # This should now print: True (since age > 30 and department == 'Sales')
